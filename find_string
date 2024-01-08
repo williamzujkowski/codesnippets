@@ -1,0 +1,39 @@
+import requests
+import pandas as pd
+
+# Prompt the user to enter their GitHub token and the organization name
+token = input("Enter your GitHub token: ")
+org_name = input("Enter the organization name: ")
+
+# GitHub API URL for searching code
+url = 'https://api.github.com/search/code'
+
+# Search query
+query = f'type:docker-image org:{org_name}'
+
+# Headers for authentication
+headers = {
+    'Authorization': f'token {token}',
+    'Accept': 'application/vnd.github.v3+json',
+}
+
+# Parameters for the search
+params = {
+    'q': query
+}
+
+# Make a request to the GitHub API
+response = requests.get(url, headers=headers, params=params)
+
+# Check if the request was successful
+if response.status_code == 200:
+    search_results = response.json()
+    # Extracting necessary data
+    data = [{'Repository': item['repository']['full_name'], 'File URL': item['html_url']} for item in search_results['items']]
+    # Creating a DataFrame
+    df = pd.DataFrame(data)
+    # Saving to CSV
+    df.to_csv('github_code_search_results.csv', index=False)
+    print("CSV file created successfully.")
+else:
+    print(f"Failed to fetch data: {response.status_code}")
